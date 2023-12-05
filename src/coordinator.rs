@@ -20,31 +20,30 @@ pub struct Subscription {
     inputs: Vec<u8>,
 }
 
-
 #[near_bindgen]
-#[derive(BorshSerialize, BorshDeserialize, Deserialize, PanicOnDefault)]
-#[serde(crate = "near_sdk::serde")]
+#[derive(BorshSerialize, BorshDeserialize, PanicOnDefault)]
 pub struct Coordinator {
     id: u32,
     subscriptions: LookupMap<u32, Subscription>,
     redundancy_count: LookupMap<Vec<u8>, u16>,
 }
 
-#[ext_contract]
-pub trait BaseConsumer {
-    fn raw_receive_compute(
-        subscription_id: u32,
-        interval: u32,
-        num_redundant_deliveries: u16,
-        sender: AccountId,
-        input: Vec<u8>,
-        output: Vec<u8>,
-        proof: Vec<u8>,
-    );
-}
+// #[ext_contract]
+// pub trait BaseConsumer {
+//     fn raw_receive_compute(
+//         subscription_id: u32,
+//         interval: u32,
+//         num_redundant_deliveries: u16,
+//         sender: AccountId,
+//         input: Vec<u8>,
+//         output: Vec<u8>,
+//         proof: Vec<u8>,
+//     );
+// }
 
 #[near_bindgen]
 impl Coordinator {
+    #[init]
     pub fn new() -> Self {
         Self {
             id: 0,
@@ -141,15 +140,16 @@ impl Coordinator {
         let sender = env::predecessor_account_id();
 
         let starting_gas = env::used_gas();
-        BaseConsumer::raw_receive_compute(
-            subscription_id,
-            delivery_interval,
-            num_redundant_deliveries + 1,
-            sender,
-            input,
-            output,
-            proof,
-        );
+
+        // BaseConsumer::raw_receive_compute(
+        //     subscription_id,
+        //     delivery_interval,
+        //     num_redundant_deliveries + 1,
+        //     sender,
+        //     input,
+        //     output,
+        //     proof,
+        // );
 
         let ending_gas = env::prepaid_gas() - env::used_gas();
 

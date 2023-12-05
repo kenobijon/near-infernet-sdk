@@ -27,7 +27,7 @@ pub struct NodeInfo {
 #[derive(BorshSerialize, BorshDeserialize)]
 pub struct Manager {
     cooldown: u32,
-    node_info: LookupMap<String, NodeInfo>,
+    node_info: LookupMap<AccountId, NodeInfo>,
 }
 
 impl Default for Manager {
@@ -41,7 +41,15 @@ impl Default for Manager {
 
 #[near_bindgen]
 impl Manager {
-    pub fn register_node(&mut self, node: String) {
+    #[init]
+    pub fn new(cooldown: u32) -> Self {
+        Self {
+            cooldown,
+            node_info: LookupMap::new(b"n".to_vec()),
+        }
+    }
+
+    pub fn register_node(&mut self, node: AccountId) {
         let account_id = env::predecessor_account_id();
         let mut info = self.node_info.get(&node).unwrap_or_else(|| NodeInfo {
             status: NodeStatus::Inactive,
@@ -61,12 +69,9 @@ impl Manager {
 
     pub fn activate_node(&mut self) {
         let account_id = env::predecessor_account_id();
-        let mut info = self
-            .node_info
-            .get(&account_id.to_string())
-            .unwrap_or_else(|| {
-                env::panic_str("NodeNotActivateable");
-            });
+        let mut info = self.node_info.get(&account_id).unwrap_or_else(|| {
+            env::panic_str("NodeNotActivateable");
+        });
 
         if info.status != NodeStatus::Registered {
             env::panic_str("NodeNotActivateable");
@@ -80,13 +85,17 @@ impl Manager {
         info.status = NodeStatus::Active;
         info.cooldown_start = 0;
 
-        self.node_info.insert(&account_id.to_string(), &info);
+        self.node_info.insert(&account_id, &info);
         env::log(format!("NodeActivated: {}", account_id).as_bytes());
     }
 
     pub fn deactivate_node(&mut self) {
         let account_id = env::predecessor_account_id();
-        self.node_info.remove(&account_id.to_string());
+        self.node_info.remove(&account_id);
         env::log(format!("NodeDeactivated: {}", account_id).as_bytes());
+    }
+
+    pub fn get_cooldown(&self) -> u32 {
+        self.cooldown
     }
 }

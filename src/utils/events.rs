@@ -22,8 +22,7 @@ pub enum InfernetEvent {
 }
 use near_sdk::{json_types::U128, serde::Serialize, AccountId};
 
-
-// TODO 
+// TODO
 /*
    /// @notice Emitted when a new subscription is created
     /// @param id subscription ID
